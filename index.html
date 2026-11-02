@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e7c86">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="David Riare">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon-180.png">
+<title>David Riare</title>
+<style>
+/* Palette: Pacific teal primary, warm sand ground, coral for things to act on.
+   Layout: phone first, single column, fixed bottom nav, capture at the top of Home. */
+:root{
+  --bg:#f3efe6;
+  --surface:#ffffff;
+  --surface-2:#fbf9f4;
+  --ink:#1b2a2b;
+  --muted:#60706f;
+  --faint:#8c9896;
+  --line:#e6dfd2;
+  --primary:#0e7c86;
+  --primary-ink:#ffffff;
+  --primary-soft:#dcefef;
+  --accent:#d9603f;
+  --accent-soft:#f7e2da;
+  --good:#2f7d5b;
+  --shadow:0 1px 2px rgba(27,42,43,.06),0 6px 20px rgba(27,42,43,.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111918;
+    --surface:#1a2423;
+    --surface-2:#141d1c;
+    --ink:#eef3f1;
+    --muted:#a3b2af;
+    --faint:#788684;
+    --line:#2a3432;
+    --primary:#4fc3c9;
+    --primary-ink:#06201f;
+    --primary-soft:#163230;
+    --accent:#f08767;
+    --accent-soft:#30221c;
+    --good:#5bbf8f;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111918;
+  --surface:#1a2423;
+  --surface-2:#141d1c;
+  --ink:#eef3f1;
+  --muted:#a3b2af;
+  --faint:#788684;
+  --line:#2a3432;
+  --primary:#4fc3c9;
+  --primary-ink:#06201f;
+  --primary-soft:#163230;
+  --accent:#f08767;
+  --accent-soft:#30221c;
+  --good:#5bbf8f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+.app{
+  max-width:620px;
+  margin:0 auto;
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+header{
+  padding:18px 16px 12px;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+}
+header h1{
+  margin:0;
+  font-size:20px;
+  letter-spacing:.2px;
+}
+header h1 span{color:var(--primary)}
+header .sub{color:var(--faint);font-size:12.5px;margin-top:2px}
+.theme-btn{
+  background:none;border:1px solid var(--line);color:var(--muted);
+  border-radius:999px;width:36px;height:36px;font-size:15px;cursor:pointer;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.theme-btn svg{width:17px;height:17px}
+main{flex:1;padding:12px 16px 48px}
+h2.view-title{font-size:16px;margin:4px 0 12px;color:var(--ink)}
+.hint{color:var(--muted);font-size:13.5px;margin:0 0 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+
+/* Capture card */
+.capture{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:var(--shadow);
+  margin-bottom:18px;
+}
+.seg{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:12px}
+.seg button{
+  flex:1;border:none;background:none;color:var(--muted);
+  padding:8px 4px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+}
+.seg button.on{background:var(--primary);color:var(--primary-ink)}
+textarea,input[type=text],input[type=url],input[type="datetime-local"]{
+  width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);
+  border-radius:12px;padding:11px 12px;font:inherit;resize:vertical;
+}
+textarea{min-height:76px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin:0 0 5px;font-weight:600}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 4px;margin:2px 0 12px;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);
+  border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.chip .dot{width:9px;height:9px;border-radius:50%}
+.chip.on{border-color:var(--primary);background:var(--primary-soft);color:var(--ink);font-weight:600}
+.toggle-row{display:flex;align-items:center;gap:9px;margin:2px 0 12px;color:var(--muted);font-size:13.5px}
+.switch{position:relative;width:42px;height:24px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.15s}
+.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+.switch input:checked + .slider{background:var(--accent)}
+.switch input:checked + .slider:before{transform:translateX(18px)}
+.btn{
+  width:100%;border:none;background:var(--primary);color:var(--primary-ink);
+  border-radius:12px;padding:13px;font:inherit;font-weight:700;cursor:pointer;
+}
+.btn.accent{background:var(--accent)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);font-weight:600}
+.btn:active{transform:translateY(1px)}
+.rec-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px 0}
+.rec-dot{width:14px;height:14px;border-radius:50%;background:var(--accent)}
+.rec-live .rec-dot{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.rec-time{font-variant-numeric:tabular-nums;font-size:26px;font-weight:700}
+.rec-btns{display:flex;gap:10px;width:100%}
+.rec-btns .btn{flex:1}
+
+/* Filter bar */
+.filters{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.search{position:relative}
+.search input{padding-left:36px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--faint)}
+
+/* Entry cards */
+.list{display:flex;flex-direction:column;gap:11px}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:12px 13px;box-shadow:var(--shadow);
+}
+.card.change{border-left:4px solid var(--accent)}
+.card.done{opacity:.6}
+.card-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.topic-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.topic-tag .dot{width:9px;height:9px;border-radius:50%}
+.badge{font-size:10.5px;letter-spacing:.4px;text-transform:uppercase;font-weight:700;padding:3px 7px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.badge.change{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.card.task-High{border-left:4px solid #c0392b}
+.card.task-Medium{border-left:4px solid #d9a400}
+.card.task-Low{border-left:4px solid #2f9e44}
+.badge.prio-High{background:#f7e0db;color:#c0392b;border-color:transparent}
+.badge.prio-Medium{background:#f6eccf;color:#9a7500;border-color:transparent}
+.badge.prio-Low{background:#dcefe2;color:#2f7d5b;border-color:transparent}
+.due{margin-top:7px;font-size:12.5px;color:var(--muted);font-weight:700}
+.due.over{color:#c0392b}
+.time{margin-left:auto;font-size:11.5px;color:var(--faint)}
+.card-body{font-size:15px;white-space:pre-wrap;word-break:break-word}
+.card-body .why{color:var(--muted);font-size:13.5px;margin-top:6px}
+.card-body .lesson{font-size:12.5px;color:var(--accent);font-weight:700;margin-bottom:4px}
+.card a.link{color:var(--primary);word-break:break-all;font-weight:600;text-decoration:none}
+.card a.link:hover{text-decoration:underline}
+.card audio{width:100%;margin-top:8px}
+.card-actions{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap;align-items:center}
+.mini{border:1px solid var(--line);background:var(--surface-2);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;font-weight:600}
+.mini.primary{background:var(--primary-soft);color:var(--primary);border-color:transparent}
+.mini.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.mini.danger{color:#c0392b}
+select.topic-select{border:1px solid var(--line);background:var(--surface-2);color:var(--muted);border-radius:8px;padding:6px 8px;font:inherit;font-size:12.5px;max-width:140px}
+.edit-form{display:flex;flex-direction:column;gap:8px}
+.empty{text-align:center;color:var(--faint);padding:38px 10px;font-size:14px}
+
+/* Meeting */
+.phrase{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:9px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow)}
+.phrase span{flex:1;font-size:14.5px}
+.phrase .copy{flex:none}
+.section-label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);font-weight:700;margin:18px 0 10px}
+
+/* Backup */
+.stat-row{display:flex;gap:10px;margin-bottom:14px}
+.stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:22px;color:var(--primary)}
+.stat small{color:var(--muted);font-size:12px}
+.bar{height:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:6px 0 4px}
+.bar i{display:block;height:100%;background:var(--primary)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.note{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* Bottom nav */
+nav{
+  position:sticky;top:0;
+  background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;
+  padding:6px 4px;
+  z-index:20;
+}
+nav button{
+  flex:1;border:none;background:none;color:var(--faint);
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 2px;font-size:10.5px;font-weight:600;cursor:pointer;
+}
+nav button svg{width:22px;height:22px}
+nav button.on{color:var(--primary)}
+nav .nbadge{position:absolute;transform:translate(14px,-6px);background:var(--accent);color:#fff;font-size:9px;min-width:15px;height:15px;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:0 3px;font-weight:700}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;opacity:0;transition:.2s;z-index:40;pointer-events:none;max-width:90%}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>David <span>Riare</span></h1>
+      <div class="sub">Your thinking, captured. Online or offline.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex:none">
+      <button class="theme-btn" id="backupBtn" aria-label="Backup and storage"></button>
+      <button class="theme-btn" id="themeBtn" aria-label="Switch light or dark">◐</button>
+    </div>
+  </header>
+  <nav id="nav"></nav>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------- topics ---------- */
+const TOPICS=[
+  {k:"Teaching and learning",c:"#0e7c86"},
+  {k:"Music education",c:"#7048e8"},
+  {k:"Spiritual",c:"#d9a400"},
+  {k:"Health and Wellness",c:"#2f9e44"},
+  {k:"Readings",c:"#c2255c"},
+  {k:"Research",c:"#e8590c"}
+];
+const PRIOS=[{k:"High",c:"#c0392b"},{k:"Medium",c:"#d9a400"},{k:"Low",c:"#2f9e44"}];
+const topicColor=k=>(TOPICS.find(t=>t.k===k)||TOPICS[0]).c;
+
+const DEFAULT_PHRASES=[
+  "Can I build on that point?",
+  "I want to raise one concern and one suggestion.",
+  "Could we come back to this once we have the figures?",
+  "To make sure I follow, are you saying that ...?",
+  "From a teaching and learning angle, I would add ...",
+  "I support this in principle. My one question is ...",
+  "Can we note that as an action and move on?"
+];
+
+/* ---------- storage: IndexedDB for entries, localStorage for small prefs ---------- */
+const DB="saka-bank", STORE="entries";
+let dbOk=true;
+function openDB(){
+  return new Promise((res,rej)=>{
+    let r;
+    try{ r=indexedDB.open(DB,1); }catch(e){ dbOk=false; return rej(e); }
+    r.onupgradeneeded=e=>{const db=e.target.result; if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE,{keyPath:"id"});};
+    r.onsuccess=e=>res(e.target.result);
+    r.onerror=e=>{dbOk=false;rej(e.target.error);};
+  });
+}
+async function dbAll(){ const db=await openDB(); return new Promise((res,rej)=>{const t=db.transaction(STORE,"readonly");const q=t.objectStore(STORE).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error);});}
+async function dbPut(it){ const db=await openDB(); return new Promise((res,rej)=>{const t=db.transaction(STORE,"readwrite");t.objectStore(STORE).put(it);t.oncomplete=res;t.onerror=()=>rej(t.error);});}
+async function dbDel(id){ const db=await openDB(); return new Promise((res,rej)=>{const t=db.transaction(STORE,"readwrite");t.objectStore(STORE).delete(id);t.oncomplete=res;t.onerror=()=>rej(t.error);});}
+async function dbClear(){ const db=await openDB(); return new Promise((res,rej)=>{const t=db.transaction(STORE,"readwrite");t.objectStore(STORE).clear();t.oncomplete=res;t.onerror=()=>rej(t.error);});}
+
+const LS={
+  get(k,f){try{const v=localStorage.getItem(k);return v==null?f:JSON.parse(v);}catch(e){return f;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+
+/* ---------- state ---------- */
+let entries=[];
+const ui={
+  tab:"home",
+  kind:"note",          // note | link | voice
+  topic:LS.get("lastTopic","Teaching and learning"),
+  isChange:false,
+  prio:"Medium",
+  draft:{},
+  filterTopic:"All",
+  search:"",
+  editing:null,
+  nextLesson:"All"
+};
+let rec={blob:null,url:null};
+const objUrls=[];
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>(s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1700);}
+function relTime(ts){
+  const d=new Date(ts),now=Date.now(),s=(now-ts)/1000;
+  if(s<60)return"just now";
+  if(s<3600)return Math.floor(s/60)+"m ago";
+  if(s<86400)return Math.floor(s/3600)+"h ago";
+  const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return days[d.getDay()]+" "+d.getDate()+" "+mo[d.getMonth()];
+}
+const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DY=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function clock(d){let h=d.getHours(),ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;return h+":"+String(d.getMinutes()).padStart(2,"0")+ap;}
+function fmtStamp(ts){const d=new Date(ts);const yr=d.getFullYear()!==new Date().getFullYear()?" "+d.getFullYear():"";return d.getDate()+" "+MO[d.getMonth()]+yr+", "+clock(d);}
+function fmtDue(ts){const d=new Date(ts);const yr=d.getFullYear()!==new Date().getFullYear()?" "+d.getFullYear():"";return DY[d.getDay()]+" "+d.getDate()+" "+MO[d.getMonth()]+yr+", "+clock(d);}
+function domain(u){try{return new URL(u).hostname.replace(/^www\./,"");}catch(e){return u;}}
+function markChips(attr,el){const box=el.closest(".chips");if(!box)return;box.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));el.classList.add("on");}
+function stashDraft(){["capText","capUrl","capWhy","capLesson","capDue","capVoiceLabel"].forEach(id=>{const el=document.getElementById(id);if(el)ui.draft[id]=el.value;});}
+const D=id=>esc(ui.draft[id]||"");
+function revokeUrls(){objUrls.forEach(u=>URL.revokeObjectURL(u));objUrls.length=0;}
+
+/* ---------- icons ---------- */
+const IC={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
+  next:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>',
+  review:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.3"/><path d="M21 4v5h-5"/></svg>',
+  meet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></svg>',
+  save:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
+  search:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  todo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/><path d="M4 6l1 1 2-2"/><path d="M4 12l1 1 2-2"/><circle cx="5" cy="18" r="1.3"/></svg>'
+};
+
+/* ---------- render ---------- */
+function render(){
+  revokeUrls();
+  const m=$("#main");
+  if(ui.tab==="home")m.innerHTML=viewHome();
+  else if(ui.tab==="todo")m.innerHTML=viewTodo();
+  else if(ui.tab==="next")m.innerHTML=viewNext();
+  else if(ui.tab==="review")m.innerHTML=viewReview();
+  else if(ui.tab==="meeting")m.innerHTML=viewMeeting();
+  else if(ui.tab==="backup")m.innerHTML=viewBackup();
+  renderNav();
+  if(ui.tab==="home")wireCapture();
+  if(ui.tab==="backup")drawStorage();
+  window.scrollTo({top:0});
+}
+
+function topicChips(sel,attr){
+  return '<div class="chips" data-chips="'+attr+'">'+TOPICS.map(t=>
+    '<button class="chip '+(sel===t.k?"on":"")+'" data-'+attr+'="'+t.k+'"><span class="dot" style="background:'+t.c+'"></span>'+t.k+'</button>'
+  ).join("")+'</div>';
+}
+
+function viewHome(){
+  let cap='<div class="capture">';
+  cap+='<div class="seg">'
+    +'<button data-kind="note" class="'+(ui.kind==="note"?"on":"")+'">Write</button>'
+    +'<button data-kind="task" class="'+(ui.kind==="task"?"on":"")+'">To do</button>'
+    +'<button data-kind="link" class="'+(ui.kind==="link"?"on":"")+'">Link</button>'
+    +'<button data-kind="voice" class="'+(ui.kind==="voice"?"on":"")+'">Record</button>'
+    +'</div>';
+  if(ui.kind==="note"){
+    cap+='<div class="field"><textarea id="capText" placeholder="What is on your mind? Dump it here, tidy it later.">'+D("capText")+'</textarea></div>';
+    cap+='<div class="toggle-row"><label class="switch"><input type="checkbox" id="capChange" '+(ui.isChange?"checked":"")+'><span class="slider"></span></label> This is a change for next time (teaching)</div>';
+    if(ui.isChange)cap+='<div class="field"><label>Which lesson or course?</label><input type="text" id="capLesson" placeholder="e.g. week 3, reading rhythm" value="'+D("capLesson")+'"></div>';
+    cap+='<button class="btn '+(ui.isChange?"accent":"")+'" data-act="save-note">Save</button>';
+  }else if(ui.kind==="task"){
+    cap+='<div class="field"><textarea id="capText" placeholder="What needs doing? A task, a deadline, a priority.">'+D("capText")+'</textarea></div>';
+    cap+='<div class="field"><label>Priority</label><div class="chips" data-chips="prio">'
+      +PRIOS.map(p=>'<button class="chip '+(ui.prio===p.k?"on":"")+'" data-prio="'+p.k+'"><span class="dot" style="background:'+p.c+'"></span>'+p.k+'</button>').join("")+'</div></div>';
+    cap+='<div class="field"><label>Deadline: date and time (optional)</label><input type="datetime-local" id="capDue" value="'+D("capDue")+'"></div>';
+    cap+='<button class="btn" data-act="save-task">Add to list</button>';
+  }else if(ui.kind==="link"){
+    cap+='<div class="field"><label>Paste the link</label><input type="url" id="capUrl" placeholder="https:// ... or a reel link" value="'+D("capUrl")+'"></div>';
+    cap+='<div class="field"><label>Why did it catch you? (one line is enough)</label><textarea id="capWhy" placeholder="This reframes how I give feedback ...">'+D("capWhy")+'</textarea></div>';
+    cap+='<button class="btn" data-act="save-link">Save link</button>';
+  }else{
+    cap+=recUI();
+  }
+  cap+='<div style="margin-top:14px"><label style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600">File it under</label>'+topicChips(ui.topic,"topic")+'</div>';
+  cap+='</div>';
+
+  // feed
+  let f='<div class="filters">';
+  f+='<div class="search">'+IC.search+'<input type="text" id="searchBox" placeholder="Search your bank" value="'+esc(ui.search)+'"></div>';
+  f+='<div class="chips" data-chips="filterTopic"><button class="chip '+(ui.filterTopic==="All"?"on":"")+'" data-filterTopic="All">All</button>'+
+     TOPICS.map(t=>'<button class="chip '+(ui.filterTopic===t.k?"on":"")+'" data-filterTopic="'+t.k+'"><span class="dot" style="background:'+t.c+'"></span>'+t.k+'</button>').join("")+'</div>';
+  f+='</div>';
+
+  const list=feedEntries()
+    .filter(e=>ui.filterTopic==="All"||e.topic===ui.filterTopic)
+    .filter(e=>matchSearch(e,ui.search))
+    .sort((a,b)=>b.created-a.created);
+  return cap+f+listHtml(list,"Nothing here yet. Your first thought is one tap away.");
+}
+
+function matchSearch(e,q){
+  if(!q)return true;q=q.toLowerCase();
+  return [e.text,e.why,e.url,e.lesson,e.topic].some(v=>v&&String(v).toLowerCase().includes(q));
+}
+function activeEntries(){return entries.filter(e=>!e.archived);}
+function feedEntries(){return entries.filter(e=>!e.archived&&!e.meeting);}
+
+function listHtml(list,emptyMsg){
+  if(!list.length)return '<div class="empty">'+esc(emptyMsg)+'</div>';
+  return '<div class="list">'+list.map(cardHtml).join("")+'</div>';
+}
+
+function cardHtml(e){
+  if(ui.editing===e.id)return editHtml(e);
+  const c=topicColor(e.topic);
+  let cls="card"+(e.kind==="change"?" change":"")+(e.kind==="task"?" task-"+(e.priority||"Medium"):"")+(e.status==="done"?" done":"");
+  let body="";
+  if(e.kind==="change"&&e.lesson)body+='<div class="lesson">'+esc(e.lesson)+'</div>';
+  if(e.kind==="link"){
+    body+='<a class="link" href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(domain(e.url))+'</a>';
+    if(e.why)body+='<div class="why">'+esc(e.why)+'</div>';
+  }else if(e.kind==="voice"){
+    if(e.audio){const u=URL.createObjectURL(e.audio);objUrls.push(u);body+='<audio controls preload="none" src="'+u+'"></audio>';}
+    if(e.text)body+='<div class="why">'+esc(e.text)+'</div>';
+  }else{
+    body+=esc(e.text||"");
+  }
+  if(e.kind==="task"&&e.due){
+    const over=e.status!=="done"&&e.due<Date.now();
+    body+='<div class="due'+(over?" over":"")+'">'+(over?"Overdue: ":"Due: ")+fmtDue(e.due)+'</div>';
+  }
+  let badge="";
+  if(e.kind==="change")badge='<span class="badge change">Next time</span>';
+  else if(e.kind==="task")badge='<span class="badge prio-'+(e.priority||"Medium")+'">'+esc(e.priority||"Medium")+'</span>';
+  else if(e.kind==="link")badge='<span class="badge">Link</span>';
+  else if(e.kind==="voice")badge='<span class="badge">Voice</span>';
+
+  let acts='<div class="card-actions">';
+  if(e.kind==="change"||e.kind==="task"){
+    acts+='<button class="mini '+(e.status==="done"?"":"accent")+'" data-act="toggle-done" data-id="'+e.id+'">'+(e.status==="done"?"Reopen":"Mark done")+'</button>';
+  }
+  if(!e.meeting)acts+=topicSelect(e);
+  acts+='<button class="mini" data-act="edit" data-id="'+e.id+'">Edit</button>';
+  acts+='<button class="mini" data-act="archive" data-id="'+e.id+'">Archive</button>';
+  acts+='<button class="mini danger" data-act="del" data-id="'+e.id+'">Delete</button>';
+  acts+='</div>';
+
+  const topicTag=e.meeting
+    ?'<span class="topic-tag"><span class="dot" style="background:#1098ad"></span>Meeting point</span>'
+    :'<span class="topic-tag"><span class="dot" style="background:'+c+'"></span>'+esc(e.topic)+'</span>';
+  return '<div class="'+cls+'">'
+    +'<div class="card-top">'+topicTag+badge
+    +'<span class="time">'+fmtStamp(e.created)+'</span></div>'
+    +'<div class="card-body">'+body+'</div>'+acts+'</div>';
+}
+
+function topicSelect(e){
+  return '<select class="topic-select" data-act="set-topic" data-id="'+e.id+'">'+
+    TOPICS.map(t=>'<option value="'+t.k+'" '+(e.topic===t.k?"selected":"")+'>'+t.k+'</option>').join("")+'</select>';
+}
+
+function editHtml(e){
+  let f='<div class="card"><div class="edit-form">';
+  if(e.kind==="link"){
+    f+='<input type="url" data-edit="url" value="'+esc(e.url)+'">';
+    f+='<textarea data-edit="why" placeholder="Why it caught you">'+esc(e.why||"")+'</textarea>';
+  }else if(e.kind==="change"){
+    f+='<input type="text" data-edit="lesson" value="'+esc(e.lesson||"")+'" placeholder="Lesson or course">';
+    f+='<textarea data-edit="text">'+esc(e.text||"")+'</textarea>';
+  }else if(e.kind==="voice"){
+    f+='<textarea data-edit="text" placeholder="Label for this recording">'+esc(e.text||"")+'</textarea>';
+  }else{
+    f+='<textarea data-edit="text">'+esc(e.text||"")+'</textarea>';
+  }
+  f+='<div class="card-actions"><button class="mini primary" data-act="save-edit" data-id="'+e.id+'">Save</button>'
+    +'<button class="mini" data-act="cancel-edit" data-id="'+e.id+'">Cancel</button></div>';
+  f+='</div></div>';
+  return f;
+}
+
+function viewTodo(){
+  const rank={High:0,Medium:1,Low:2};
+  const tasks=activeEntries().filter(e=>e.kind==="task").sort((a,b)=>{
+    const ad=a.status==="done",bd=b.status==="done";
+    if(ad!==bd)return ad?1:-1;
+    if(a.due&&b.due&&a.due!==b.due)return a.due-b.due;
+    if(a.due&&!b.due)return -1;
+    if(!a.due&&b.due)return 1;
+    return (rank[a.priority]-rank[b.priority])||b.created-a.created;
+  });
+  let h='<h2 class="view-title">To do and deadlines</h2>';
+  h+='<p class="hint">Your priority list. The soonest deadlines and highest priorities rise to the top, and anything past its deadline shows in red. Add a new one from the To do option on the Home tab.</p>';
+  return h+listHtml(tasks,"No tasks yet. Open the To do option on Home, write what needs doing, set a priority, and add a deadline.");
+}
+
+function viewNext(){
+  const changes=activeEntries().filter(e=>e.kind==="change");
+  const lessons=["All",...Array.from(new Set(changes.map(e=>e.lesson).filter(Boolean)))];
+  let h='<h2 class="view-title">Next time</h2>';
+  h+='<p class="hint">The changes you promised yourself. Before you teach a lesson again, open it here first so you actually make the change instead of repeating the old version.</p>';
+  if(lessons.length>1){
+    h+='<div class="chips">'+lessons.map(l=>'<button class="chip '+(ui.nextLesson===l?"on":"")+'" data-nextlesson="'+esc(l)+'">'+esc(l)+'</button>').join("")+'</div>';
+  }
+  let list=changes.filter(e=>ui.nextLesson==="All"||e.lesson===ui.nextLesson)
+    .sort((a,b)=>(a.status==="done")-(b.status==="done")||b.created-a.created);
+  return h+listHtml(list,"No changes logged yet. When you finish a class and think 'next time I will ...', capture it on the Write tab with the change toggle on.");
+}
+
+function viewReview(){
+  const list=feedEntries().filter(e=>!e.reviewed).sort((a,b)=>a.created-b.created);
+  let h='<h2 class="view-title">Weekly review</h2>';
+  h+='<p class="hint">Your talanoa with yourself. Go through what you dumped, keep the good ones (tidy their topic), and archive the rest. Clearing this is the habit that turns a pile of notes into a bank you trust.</p>';
+  if(!list.length)return h+'<div class="empty">All caught up. Nothing waiting to be reviewed.</div>';
+  h+='<p class="section-label">'+list.length+' to review</p>';
+  return h+listHtml(list.map(e=>e),"");
+}
+
+function viewMeeting(){
+  const phrases=LS.get("phrases",DEFAULT_PHRASES);
+  let h='<h2 class="view-title">Meetings</h2>';
+  h+='<p class="hint">Two things to beat the freeze: a few lines ready to borrow, and a place to park the point you want to raise before it slips while someone else is talking.</p>';
+  h+='<p class="section-label">Points to raise</p>';
+  const pts=entries.filter(e=>!e.archived&&e.meeting).sort((a,b)=>b.created-a.created);
+  h+='<div class="capture"><div class="field"><textarea id="meetPoint" placeholder="The point I want to make ..."></textarea></div><button class="btn" data-act="save-point">Park this point</button></div>';
+  h+=listHtml(pts,"No points parked. Jot one the moment it comes to you.");
+  h+='<p class="section-label">Lines to borrow</p>';
+  h+='<div>'+phrases.map((p,i)=>'<div class="phrase"><span>'+esc(p)+'</span><button class="mini primary copy" data-act="copy-phrase" data-i="'+i+'">Copy</button><button class="mini danger" data-act="del-phrase" data-i="'+i+'">x</button></div>').join("")+'</div>';
+  h+='<div class="capture" style="margin-top:12px"><div class="field"><input type="text" id="newPhrase" placeholder="Add your own line"></div><button class="btn ghost" data-act="add-phrase">Add line</button></div>';
+  return h;
+}
+
+function viewBackup(){
+  const voice=entries.filter(e=>e.kind==="voice").length;
+  let h='<h2 class="view-title">Backup and storage</h2>';
+  h+='<div class="stat-row"><div class="stat"><b>'+entries.length+'</b><small>entries</small></div>'
+    +'<div class="stat"><b>'+activeEntries().filter(e=>e.kind==="change"&&e.status!=="done").length+'</b><small>open changes</small></div>'
+    +'<div class="stat"><b>'+voice+'</b><small>voice notes</small></div></div>';
+  h+='<div class="stat" style="text-align:left"><small>Storage used on this device</small><div class="bar"><i id="useBar" style="width:0%"></i></div><div class="note" id="useText">checking ...</div></div>';
+  h+='<p class="section-label">Keep your bank safe</p>';
+  h+='<div class="stack">';
+  h+='<button class="btn" data-act="export">Download a backup</button>';
+  h+='<label class="btn ghost" style="text-align:center;cursor:pointer">Restore from a backup<input type="file" id="importFile" accept="application/json" hidden></label>';
+  h+='<button class="btn ghost" data-act="toggle-theme-save">Switch light or dark</button>';
+  h+='</div>';
+  h+='<p class="section-label">Good to know</p>';
+  h+='<p class="note">Your bank lives inside this browser on this device, so it keeps working with no signal. Three habits keep it safe: open the page in the same browser each time (bookmark it or add it to your home screen), download a backup now and then, and restore it on a new phone from that file. Clearing your browser data will empty the bank, so a backup is your safety net.</p>';
+  h+='<div class="stack" style="margin-top:14px"><button class="btn ghost danger-btn" data-act="clearall" style="color:#c0392b">Erase everything</button></div>';
+  return h;
+}
+
+/* ---------- nav ---------- */
+function renderNav(){
+  const open=activeEntries().filter(e=>e.kind==="change"&&e.status!=="done").length;
+  const toRev=feedEntries().filter(e=>!e.reviewed).length;
+  const overdue=activeEntries().filter(e=>e.kind==="task"&&e.status!=="done"&&e.due&&e.due<Date.now()).length;
+  const items=[
+    ["home","Home",IC.home,0],
+    ["todo","To do",IC.todo,overdue],
+    ["next","Next time",IC.next,open],
+    ["review","Review",IC.review,toRev],
+    ["meeting","Meetings",IC.meet,0]
+  ];
+  $("#nav").innerHTML=items.map(([k,label,ic,b])=>
+    '<button data-tab="'+k+'" class="'+(ui.tab===k?"on":"")+'">'+(b>0?'<span class="nbadge">'+(b>9?"9+":b)+'</span>':"")+ic+'<span>'+label+'</span></button>'
+  ).join("");
+}
+
+/* ---------- voice (uses the phone's own recorder via a file input) ---------- */
+function recUI(){
+  if(rec.blob){
+    const u=rec.url;
+    return '<div class="rec-wrap"><audio controls src="'+u+'"></audio>'
+      +'<div class="field" style="width:100%"><label>Add a label (optional)</label><input type="text" id="capVoiceLabel" placeholder="What is this about?"></div>'
+      +'<div class="rec-btns"><button class="btn ghost" data-act="rec-discard">Discard</button><button class="btn" data-act="save-voice">Save voice note</button></div></div>';
+  }
+  return '<div class="rec-wrap"><div class="rec-dot" style="background:var(--line)"></div>'
+    +'<div class="note" style="text-align:center">Capture a quick voice note. Speaking is faster than typing when you are on the move.</div>'
+    +'<div class="rec-btns">'
+    +'<label class="btn" style="text-align:center;cursor:pointer">Record<input type="file" class="voiceInput" accept="audio/*" capture hidden></label>'
+    +'<label class="btn ghost" style="text-align:center;cursor:pointer">Attach clip<input type="file" class="voiceInput" accept="audio/*" hidden></label>'
+    +'</div></div>';
+}
+function recDiscard(){ rec.blob=null;if(rec.url){URL.revokeObjectURL(rec.url);rec.url=null;} render(); }
+async function cap(name){ try{ if(window.claude&&claude.use)return await claude.use(name); }catch(e){} return null; }
+
+/* ---------- capture wiring ---------- */
+function wireCapture(){
+  const s=$("#searchBox");
+  if(s)s.oninput=()=>{ui.search=s.value;refreshFeed();};
+  const ch=$("#capChange");
+  if(ch)ch.onchange=()=>{stashDraft();ui.isChange=ch.checked;render();};
+}
+function refreshFeed(){
+  // re-render only the list to keep search focus
+  const list=feedEntries()
+    .filter(e=>ui.filterTopic==="All"||e.topic===ui.filterTopic)
+    .filter(e=>matchSearch(e,ui.search))
+    .sort((a,b)=>b.created-a.created);
+  const cur=document.querySelector(".list")||document.querySelector(".empty");
+  if(cur){revokeUrls();const tmp=document.createElement("div");tmp.innerHTML=listHtml(list,"Nothing matches that search.");cur.replaceWith(tmp.firstElementChild);}
+}
+
+/* ---------- actions ---------- */
+async function addEntry(obj){
+  const e=Object.assign({id:uid(),created:Date.now(),topic:ui.topic,archived:false,reviewed:false},obj);
+  entries.push(e);
+  try{await dbPut(e);}catch(err){toast("Could not save. Check storage.");}
+  LS.set("lastTopic",ui.topic);
+}
+function byId(id){return entries.find(e=>e.id===id);}
+
+document.addEventListener("click",async ev=>{
+  const el=ev.target.closest("[data-act],[data-tab],[data-kind],[data-topic],[data-filterTopic],[data-nextlesson]");
+  if(!el)return;
+
+  if(el.dataset.tab){stashDraft();ui.tab=el.dataset.tab;ui.editing=null;render();return;}
+  if(el.dataset.kind){stashDraft();ui.kind=el.dataset.kind;render();return;}
+  if(el.dataset.topic){ui.topic=el.dataset.topic;LS.set("lastTopic",ui.topic);markChips("topic",el);return;}
+  if(el.dataset.prio){ui.prio=el.dataset.prio;markChips("prio",el);return;}
+  if(el.dataset.filterTopic){stashDraft();ui.filterTopic=el.dataset.filterTopic;render();return;}
+  if(el.dataset.nextlesson){ui.nextLesson=el.dataset.nextlesson;render();return;}
+
+  const act=el.dataset.act,id=el.dataset.id;
+  switch(act){
+    case "save-note":{
+      const t=$("#capText").value.trim();
+      if(!t){toast("Write something first");return;}
+      const isCh=$("#capChange")&&$("#capChange").checked;
+      const lesson=isCh&&$("#capLesson")?$("#capLesson").value.trim():"";
+      await addEntry({kind:isCh?"change":"note",text:t,lesson:lesson,status:isCh?"open":undefined});
+      ui.isChange=false;ui.draft={};toast("Saved to your bank");render();break;
+    }
+    case "save-task":{
+      const t=$("#capText").value.trim();
+      if(!t){toast("Write the task first");return;}
+      const raw=$("#capDue")?$("#capDue").value:"";
+      const due=raw?new Date(raw).getTime():null;
+      await addEntry({kind:"task",text:t,priority:ui.prio||"Medium",due:due,status:"open"});
+      ui.draft={};toast("Added to your list");render();break;
+    }
+    case "save-link":{
+      let u=$("#capUrl").value.trim();
+      if(!u){toast("Paste a link first");return;}
+      if(!/^https?:\/\//i.test(u))u="https://"+u;
+      await addEntry({kind:"link",url:u,why:$("#capWhy").value.trim()});
+      ui.draft={};toast("Link saved");render();break;
+    }
+    case "save-voice":{
+      if(!rec.blob)return;
+      const label=$("#capVoiceLabel")?$("#capVoiceLabel").value.trim():"";
+      await addEntry({kind:"voice",audio:rec.blob,text:label});
+      rec.blob=null;if(rec.url){URL.revokeObjectURL(rec.url);rec.url=null;}
+      toast("Voice note saved");render();break;
+    }
+    case "rec-discard":recDiscard();break;
+    case "toggle-done":{const e=byId(id);if(e){e.status=e.status==="done"?"open":"done";await dbPut(e);render();}break;}
+    case "archive":{const e=byId(id);if(e){e.archived=true;await dbPut(e);toast("Archived");render();}break;}
+    case "del":{const e=byId(id);if(e){entries=entries.filter(x=>x.id!==id);await dbDel(id);toast("Deleted");render();}break;}
+    case "edit":ui.editing=id;render();break;
+    case "cancel-edit":ui.editing=null;render();break;
+    case "save-edit":{
+      const e=byId(id);if(!e)break;
+      document.querySelectorAll('[data-edit]').forEach(inp=>{e[inp.dataset.edit]=inp.value.trim();});
+      ui.editing=null;await dbPut(e);toast("Updated");render();break;
+    }
+    case "save-point":{
+      const t=$("#meetPoint").value.trim();if(!t){toast("Type the point first");return;}
+      const e={id:uid(),created:Date.now(),kind:"note",text:t,meeting:true,archived:false,reviewed:true};
+      entries.push(e);await dbPut(e);render();break;
+    }
+    case "copy-phrase":{
+      const phrases=LS.get("phrases",DEFAULT_PHRASES);const txt=phrases[+el.dataset.i];
+      try{await navigator.clipboard.writeText(txt);toast("Copied");}catch(e){toast("Copy not allowed here");}
+      break;
+    }
+    case "add-phrase":{
+      const v=$("#newPhrase").value.trim();if(!v)return;
+      const phrases=LS.get("phrases",DEFAULT_PHRASES);phrases.push(v);LS.set("phrases",phrases);render();break;
+    }
+    case "del-phrase":{
+      const phrases=LS.get("phrases",DEFAULT_PHRASES);phrases.splice(+el.dataset.i,1);LS.set("phrases",phrases);render();break;
+    }
+    case "set-topic":break; // handled on change
+    case "export":exportData();break;
+    case "clearall":confirmClear(el);break;
+    case "toggle-theme-save":toggleTheme();break;
+  }
+});
+
+document.addEventListener("change",async ev=>{
+  const vi=ev.target.closest(".voiceInput");
+  if(vi&&vi.files&&vi.files[0]){
+    rec.blob=vi.files[0];
+    if(rec.url)URL.revokeObjectURL(rec.url);
+    rec.url=URL.createObjectURL(rec.blob);
+    render();return;
+  }
+  const sel=ev.target.closest('select[data-act="set-topic"]');
+  if(sel){const e=byId(sel.dataset.id);if(e){e.topic=sel.value;await dbPut(e);toast("Moved to "+sel.value);render();}return;}
+  const f=ev.target.closest("#importFile");
+  if(f&&f.files[0])importData(f.files[0]);
+});
+
+/* confirm clear without using blocked confirm() */
+let clearArmed=false;
+function confirmClear(btn){
+  if(!clearArmed){clearArmed=true;btn.textContent="Tap again to confirm erase";setTimeout(()=>{clearArmed=false;if(document.body.contains(btn))btn.textContent="Erase everything";},3500);return;}
+  dbClear().then(()=>{entries=[];clearArmed=false;toast("Bank cleared");render();});
+}
+
+/* ---------- export / import (audio inlined as base64) ---------- */
+function blobToB64(b){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(b);});}
+function b64ToBlob(d){const [h,data]=d.split(",");const mime=(h.match(/:(.*?);/)||[])[1]||"audio/webm";const bin=atob(data);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}
+async function exportData(){
+  const out=[];
+  for(const e of entries){const c=Object.assign({},e);if(e.audio instanceof Blob)c.audio=await blobToB64(e.audio);out.push(c);}
+  const payload={app:"the-bank",version:1,exported:new Date().toISOString(),phrases:LS.get("phrases",DEFAULT_PHRASES),entries:out};
+  const json=JSON.stringify(payload);
+  const filename="bank-backup-"+new Date().toISOString().slice(0,10)+".json";
+  const downloads=await cap("downloads");
+  if(downloads){
+    try{await downloads.save({filename,data:json});toast("Backup saved");}
+    catch(e){toast("Save was declined");}
+    return;
+  }
+  try{
+    const blob=new Blob([json],{type:"application/json"});
+    const u=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=u;a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),1000);
+    toast("Backup downloaded");
+  }catch(e){
+    try{await navigator.clipboard.writeText(json);toast("Backup copied. Paste it into a note to keep it.");}
+    catch(e2){toast("Backup not available in this view");}
+  }
+}
+async function importData(file){
+  try{
+    const txt=await file.text();const data=JSON.parse(txt);
+    if(!data.entries)throw 0;
+    if(data.phrases)LS.set("phrases",data.phrases);
+    const have=new Set(entries.map(e=>e.id));
+    for(const e of data.entries){
+      if(have.has(e.id))continue;
+      if(typeof e.audio==="string"&&e.audio.startsWith("data:"))e.audio=b64ToBlob(e.audio);
+      entries.push(e);await dbPut(e);
+    }
+    toast("Backup restored");render();
+  }catch(e){toast("That file could not be read");}
+}
+
+/* ---------- storage meter ---------- */
+async function drawStorage(){
+  if(navigator.storage&&navigator.storage.estimate){
+    try{
+      const {usage=0,quota=0}=await navigator.storage.estimate();
+      const pct=quota?Math.min(100,Math.round(usage/quota*100)):0;
+      const bar=$("#useBar"),tx=$("#useText");
+      if(bar)bar.style.width=pct+"%";
+      if(tx)tx.textContent=(usage/1048576).toFixed(1)+" MB used of about "+(quota/1048576).toFixed(0)+" MB available ("+pct+"%).";
+    }catch(e){const tx=$("#useText");if(tx)tx.textContent="Storage estimate not available on this browser.";}
+  }else{const tx=$("#useText");if(tx)tx.textContent="Storage estimate not available on this browser.";}
+}
+
+/* ---------- theme ---------- */
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute("data-theme");
+  const next=cur==="dark"?"light":cur==="light"?"dark":(window.matchMedia("(prefers-color-scheme: dark)").matches?"light":"dark");
+  document.documentElement.setAttribute("data-theme",next);
+  LS.set("theme",next);
+}
+$("#themeBtn").addEventListener("click",toggleTheme);
+$("#backupBtn").innerHTML=IC.save;
+$("#backupBtn").addEventListener("click",()=>{stashDraft();ui.tab="backup";render();});
+
+/* ---------- boot ---------- */
+(function initTheme(){const t=LS.get("theme",null);if(t)document.documentElement.setAttribute("data-theme",t);})();
+(async function boot(){
+  try{entries=await dbAll();}catch(e){entries=[];}
+  if(!dbOk){
+    $("#main").innerHTML='<p class="hint">This browser is blocking local storage (often private or incognito mode). Open the page in a normal browser window so your bank can save.</p>';
+    return;
+  }
+  render();
+})();
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});
+}
+</script>
+</body>
+</html>
