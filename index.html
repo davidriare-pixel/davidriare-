@@ -6,8 +6,6 @@
 <meta name="theme-color" content="#0e7c86">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="David Riare">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="apple-touch-icon" href="./apple-touch-icon-180.png">
 <title>David Riare</title>
 <style>
 /* Palette: Pacific teal primary, warm sand ground, coral for things to act on.
@@ -194,6 +192,8 @@ textarea{min-height:76px}
 .card a.link{color:var(--primary);word-break:break-all;font-weight:600;text-decoration:none}
 .card a.link:hover{text-decoration:underline}
 .card audio{width:100%;margin-top:8px}
+.shot{width:100%;border-radius:12px;max-height:320px;object-fit:cover;display:block}
+.card-body .shot{margin-top:8px}
 .card-actions{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap;align-items:center}
 .mini{border:1px solid var(--line);background:var(--surface-2);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;font-weight:600}
 .mini.primary{background:var(--primary-soft);color:var(--primary);border-color:transparent}
@@ -319,6 +319,7 @@ const ui={
   nextLesson:"All"
 };
 let rec={blob:null,url:null};
+let pic={blob:null,url:null};
 const objUrls=[];
 
 /* ---------- helpers ---------- */
@@ -384,7 +385,8 @@ function viewHome(){
     +'<button data-kind="note" class="'+(ui.kind==="note"?"on":"")+'">Write</button>'
     +'<button data-kind="task" class="'+(ui.kind==="task"?"on":"")+'">To do</button>'
     +'<button data-kind="link" class="'+(ui.kind==="link"?"on":"")+'">Link</button>'
-    +'<button data-kind="voice" class="'+(ui.kind==="voice"?"on":"")+'">Record</button>'
+    +'<button data-kind="voice" class="'+(ui.kind==="voice"?"on":"")+'">Voice</button>'
+    +'<button data-kind="photo" class="'+(ui.kind==="photo"?"on":"")+'">Photo</button>'
     +'</div>';
   if(ui.kind==="note"){
     cap+='<div class="field"><textarea id="capText" placeholder="What is on your mind? Dump it here, tidy it later.">'+D("capText")+'</textarea></div>';
@@ -401,8 +403,10 @@ function viewHome(){
     cap+='<div class="field"><label>Paste the link</label><input type="url" id="capUrl" placeholder="https:// ... or a reel link" value="'+D("capUrl")+'"></div>';
     cap+='<div class="field"><label>Why did it catch you? (one line is enough)</label><textarea id="capWhy" placeholder="This reframes how I give feedback ...">'+D("capWhy")+'</textarea></div>';
     cap+='<button class="btn" data-act="save-link">Save link</button>';
-  }else{
+  }else if(ui.kind==="voice"){
     cap+=recUI();
+  }else{
+    cap+=picUI();
   }
   cap+='<div style="margin-top:14px"><label style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600">File it under</label>'+topicChips(ui.topic,"topic")+'</div>';
   cap+='</div>';
@@ -445,6 +449,9 @@ function cardHtml(e){
   }else if(e.kind==="voice"){
     if(e.audio){const u=URL.createObjectURL(e.audio);objUrls.push(u);body+='<audio controls preload="none" src="'+u+'"></audio>';}
     if(e.text)body+='<div class="why">'+esc(e.text)+'</div>';
+  }else if(e.kind==="photo"){
+    if(e.image){const u=URL.createObjectURL(e.image);objUrls.push(u);body+='<img class="shot" src="'+u+'" alt="photo">';}
+    if(e.text)body+='<div class="why">'+esc(e.text)+'</div>';
   }else{
     body+=esc(e.text||"");
   }
@@ -457,6 +464,7 @@ function cardHtml(e){
   else if(e.kind==="task")badge='<span class="badge prio-'+(e.priority||"Medium")+'">'+esc(e.priority||"Medium")+'</span>';
   else if(e.kind==="link")badge='<span class="badge">Link</span>';
   else if(e.kind==="voice")badge='<span class="badge">Voice</span>';
+  else if(e.kind==="photo")badge='<span class="badge">Photo</span>';
 
   let acts='<div class="card-actions">';
   if(e.kind==="change"||e.kind==="task"){
@@ -604,6 +612,35 @@ function recUI(){
     +'</div></div>';
 }
 function recDiscard(){ rec.blob=null;if(rec.url){URL.revokeObjectURL(rec.url);rec.url=null;} render(); }
+function picUI(){
+  if(pic.blob){
+    return '<div class="rec-wrap"><img class="shot" src="'+pic.url+'" alt="preview">'
+      +'<div class="field" style="width:100%"><label>Add a note (optional)</label><input type="text" id="capPhotoLabel" placeholder="What is this? e.g. lunch, 2 eggs and greens"></div>'
+      +'<div class="rec-btns"><button class="btn ghost" data-act="pic-discard">Discard</button><button class="btn" data-act="save-photo">Save photo</button></div></div>';
+  }
+  return '<div class="rec-wrap">'
+    +'<div class="note" style="text-align:center">Snap a photo or choose one from your phone. Good for a food diary or a journal moment.</div>'
+    +'<div class="rec-btns">'
+    +'<label class="btn" style="text-align:center;cursor:pointer">Camera<input type="file" class="photoInput" accept="image/*" capture="environment" hidden></label>'
+    +'<label class="btn ghost" style="text-align:center;cursor:pointer">Choose photo<input type="file" class="photoInput" accept="image/*" hidden></label>'
+    +'</div></div>';
+}
+function resizeImage(file,maxDim,quality){
+  return new Promise(resolve=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w>h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+      else if(h>=w&&h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      try{c.toBlob(b=>resolve(b||file),"image/jpeg",quality);}catch(e){resolve(file);}
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);resolve(file);};
+    img.src=url;
+  });
+}
 async function cap(name){ try{ if(window.claude&&claude.use)return await claude.use(name); }catch(e){} return null; }
 
 /* ---------- capture wiring ---------- */
@@ -675,7 +712,15 @@ document.addEventListener("click",async ev=>{
       rec.blob=null;if(rec.url){URL.revokeObjectURL(rec.url);rec.url=null;}
       toast("Voice note saved");render();break;
     }
+    case "save-photo":{
+      if(!pic.blob)return;
+      const label=$("#capPhotoLabel")?$("#capPhotoLabel").value.trim():"";
+      await addEntry({kind:"photo",image:pic.blob,text:label});
+      pic.blob=null;if(pic.url){URL.revokeObjectURL(pic.url);pic.url=null;}
+      ui.draft={};toast("Photo saved");render();break;
+    }
     case "rec-discard":recDiscard();break;
+    case "pic-discard":pic.blob=null;if(pic.url){URL.revokeObjectURL(pic.url);pic.url=null;}render();break;
     case "toggle-done":{const e=byId(id);if(e){e.status=e.status==="done"?"open":"done";await dbPut(e);render();}break;}
     case "archive":{const e=byId(id);if(e){e.archived=true;await dbPut(e);toast("Archived");render();}break;}
     case "del":{const e=byId(id);if(e){entries=entries.filter(x=>x.id!==id);await dbDel(id);toast("Deleted");render();}break;}
@@ -718,6 +763,11 @@ document.addEventListener("change",async ev=>{
     rec.url=URL.createObjectURL(rec.blob);
     render();return;
   }
+  const pi=ev.target.closest(".photoInput");
+  if(pi&&pi.files&&pi.files[0]){
+    resizeImage(pi.files[0],1280,0.72).then(b=>{pic.blob=b;if(pic.url)URL.revokeObjectURL(pic.url);pic.url=URL.createObjectURL(pic.blob);render();});
+    return;
+  }
   const sel=ev.target.closest('select[data-act="set-topic"]');
   if(sel){const e=byId(sel.dataset.id);if(e){e.topic=sel.value;await dbPut(e);toast("Moved to "+sel.value);render();}return;}
   const f=ev.target.closest("#importFile");
@@ -736,7 +786,7 @@ function blobToB64(b){return new Promise(res=>{const r=new FileReader();r.onload
 function b64ToBlob(d){const [h,data]=d.split(",");const mime=(h.match(/:(.*?);/)||[])[1]||"audio/webm";const bin=atob(data);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}
 async function exportData(){
   const out=[];
-  for(const e of entries){const c=Object.assign({},e);if(e.audio instanceof Blob)c.audio=await blobToB64(e.audio);out.push(c);}
+  for(const e of entries){const c=Object.assign({},e);if(e.audio instanceof Blob)c.audio=await blobToB64(e.audio);if(e.image instanceof Blob)c.image=await blobToB64(e.image);out.push(c);}
   const payload={app:"the-bank",version:1,exported:new Date().toISOString(),phrases:LS.get("phrases",DEFAULT_PHRASES),entries:out};
   const json=JSON.stringify(payload);
   const filename="bank-backup-"+new Date().toISOString().slice(0,10)+".json";
@@ -767,6 +817,7 @@ async function importData(file){
     for(const e of data.entries){
       if(have.has(e.id))continue;
       if(typeof e.audio==="string"&&e.audio.startsWith("data:"))e.audio=b64ToBlob(e.audio);
+      if(typeof e.image==="string"&&e.image.startsWith("data:"))e.image=b64ToBlob(e.image);
       entries.push(e);await dbPut(e);
     }
     toast("Backup restored");render();
@@ -807,9 +858,6 @@ $("#backupBtn").addEventListener("click",()=>{stashDraft();ui.tab="backup";rende
   }
   render();
 })();
-if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
-  window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});
-}
 </script>
 </body>
 </html>
